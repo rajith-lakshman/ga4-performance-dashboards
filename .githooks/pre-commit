@@ -1,0 +1,33 @@
+#!/bin/sh
+# Blocks commits that add personal paths or credential-like strings.
+# Enable once per clone:  git config core.hooksPath .githooks
+#
+# Power BI rewrites power-bi/*.SemanticModel/definition/expressions.tmdl with your own
+# folder every time you save, which is the usual way a local path leaks.
+
+# Added lines only; this script is excluded so its own patterns do not trigger it,
+# and the documented example user name "you" is allowed.
+added=$(git diff --cached --no-color -U0 --diff-filter=AM -- . ':!.githooks' \
+  | grep -E '^\+[^+]' | grep -v -E 'Users\\you\\|/Users/you/' || true)
+
+fail=0
+check() {
+  if printf '%s\n' "$added" | grep -I -E -q -e "$1"; then
+    echo "pre-commit: blocked, staged changes match: $2" >&2
+    fail=1
+  fi
+}
+
+# Unix-style paths must not directly follow a hostname, so URLs like example.com/home/x/ pass.
+check '[A-Za-z]:\\Users\\|(^|[^A-Za-z0-9.-])/(Users|home)/[A-Za-z0-9._-]+/' 'a personal home-directory path'
+check '[\\/]OneDrive' 'a OneDrive path'
+check '-----BEGIN [A-Z ]*PRIVATE KEY-----' 'a private key'
+check '"private_key_id"|"client_secret"' 'a Google service-account key'
+check 'AIza[0-9A-Za-z_-]{35}' 'a Google API key'
+check '(ghp|gho|github_pat)_[A-Za-z0-9_]{20,}' 'a GitHub token'
+
+if [ "$fail" -ne 0 ]; then
+  echo "If the match is a false positive, commit with: git commit --no-verify" >&2
+  echo "For Power BI: git checkout -- power-bi/*.SemanticModel/definition/expressions.tmdl" >&2
+  exit 1
+fi

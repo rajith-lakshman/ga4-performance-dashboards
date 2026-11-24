@@ -1,0 +1,6 @@
+/// Full path of the data/GA4-demo folder in your clone (set locally; do not commit your own path).
+expression DataFolder = "C:\path\to\ga4-performance-dashboards\data\sample" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 64f35e96-4a6f-4d65-b2a8-7d040a353340
+
+	annotation PBI_ResultType = Text
+

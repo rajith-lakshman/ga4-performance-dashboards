@@ -1,0 +1,126 @@
+---
+title: "GA4 sample ecommerce performance dashboard"
+format:
+  dashboard:
+    embed-resources: true
+    scrolling: true
+    nav-buttons: []
+lang: en-GB
+---
+
+```{r}
+#| include: false
+source(here::here("r-dashboard", "helpers.R"))
+library(tidyr)
+
+fmt <- function(x) comma(x)
+total_sessions <- sum(daily$sessions)
+total_engaged <- sum(daily$engaged_sessions)
+```
+
+# How many sessions did the site get, and how engaged were they?
+
+## Row {height=20%}
+
+```{r}
+#| content: valuebox
+#| title: "Sessions"
+list(icon = "bar-chart", color = "primary", value = fmt(total_sessions))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Engaged sessions"
+list(icon = "hand-index", color = "primary", value = fmt(total_engaged))
+```
+
+```{r}
+#| content: valuebox
+#| title: "Engagement rate"
+list(icon = "percent", color = "primary", value = percent(total_engaged / total_sessions, accuracy = 0.1))
+```
+
+## Row {height=45%}
+
+```{r}
+#| title: "Sessions and engaged sessions per day (sample data)"
+#| fig-alt: "Line chart of daily sessions and engaged sessions from November 2020 to January 2021. Engaged sessions follow sessions at a lower level."
+chart_sessions()
+```
+
+```{r}
+#| title: "Engagement rate per day (sample data)"
+#| fig-alt: "Line chart of daily engagement rate, engaged sessions divided by sessions."
+chart_engagement()
+```
+
+## Row {height=20%}
+
+::: {.card}
+**KPI definitions.** *Sessions*: distinct user_pseudo_id + ga_session_id. *Engaged sessions*: sessions with 10 or more seconds of engagement, a purchase, or 2 or more page views (GA4 rule, rebuilt from events). *Engagement rate*: engaged sessions divided by sessions.
+
+**Limitations.** Sample data from a different organisation's ecommerce site; patterns do not describe CMRD users. The engaged-session rule is rebuilt from events and has not been compared with GA4's own flag. Obfuscation and null values may affect counts.
+:::
+
+# Who visited: new or returning users, which channels and devices?
+
+## Row {height=40%}
+
+```{r}
+#| title: "New and returning users, share of daily active users by month (sample data)"
+#| fig-alt: "Stacked bar chart by month. New users make up roughly 78 to 85 percent of daily active users and returning users the rest."
+chart_users()
+```
+
+```{r}
+#| title: "Channel mix, share of sessions by month (sample data)"
+#| fig-alt: "Stacked bar chart by month of the share of sessions by channel: Direct, Organic Search, Other, Paid Search and Referral. Percentages are labelled."
+share_plot(channel, "channel", "sessions")
+```
+
+```{r}
+#| title: "Device split, share of sessions by month (sample data)"
+#| fig-alt: "Stacked bar chart by month of the share of sessions by device category: desktop, mobile and tablet. Percentages are labelled."
+share_plot(device, "device_category", "sessions")
+```
+
+## Row {height=25%}
+
+::: {.card}
+**KPI definitions.** *New users*: users with a session numbered 1 on that day. *Returning users*: active users that day who are not new. Both are daily distinct counts, so shares here are of user-days (daily active users summed over the month), not of distinct users. *Channel mix*: share of sessions by channel, grouped from traffic_source medium. *Device split*: share of sessions by device category.
+
+**Limitations.** Channel comes from user first-touch traffic_source in this dataset, not the session's own source, and "Other" collects every medium not listed. Sample data from a different organisation; not CMRD users.
+:::
+
+# Where do sessions drop out between viewing an item and purchasing?
+
+## Row
+
+::: {.card}
+Funnel window: `{r} format(funnel_start, "%d %b %Y")` to 31 Jan 2021. Earlier days are excluded because the raw sample has no or partial add_to_cart events on 1 to 24 Nov 2020.
+:::
+
+## Row {height=45%}
+
+```{r}
+#| title: "Sessions reaching each funnel step (sample data)"
+#| fig-alt: "Horizontal bar chart of sessions at each step: view_item, add_to_cart, begin_checkout and purchase, decreasing at each step. Counts are labelled."
+chart_funnel()
+```
+
+```{r}
+#| title: "Step drop-off (sample data)"
+knitr::kable(
+  funnel_table() |>
+    transmute(Step = step, Sessions = comma(sessions),
+              `Drop-off from previous step` = ifelse(is.na(drop_off), "n/a", percent(drop_off, accuracy = 0.1)))
+)
+```
+
+## Row {height=20%}
+
+::: {.card}
+**KPI definitions.** *Funnel sessions*: sessions with at least one event of that step; order within a session is not checked. *Step drop-off*: 1 minus (sessions at step divided by sessions at the previous step).
+
+**Limitations.** Not a strict sequence, so drop-off is indicative. Totals cover only the funnel window above. Sample data from a different organisation; not CMRD users.
+:::

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "ov_foot0000000000008",
+  "position": {
+    "x": 40,
+    "y": 900,
+    "z": 0,
+    "height": 160,
+    "width": 1840,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "KPI definitions: Sessions = distinct user_pseudo_id + ga_session_id. Engaged sessions = 10 or more seconds of engagement, a purchase, or 2 or more page views (GA4 rule rebuilt from events). Engagement rate = engaged sessions divided by sessions. Limitations: sample data from a different organisation's ecommerce site, so patterns do not describe CMRD users. The engaged rule is rebuilt from events and not compared with GA4's own flag. Obfuscation and nulls may affect counts."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

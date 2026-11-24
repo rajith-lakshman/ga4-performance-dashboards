@@ -1,0 +1,61 @@
+# --- Secrets and credentials (never commit) ---
+.env
+.Renviron
+profiles.yml
+*-key.json
+*service-account*.json
+.secrets/
+*.pem
+
+# --- dbt ---
+target/
+dbt_packages/
+logs/
+
+# --- R ---
+.Rhistory
+.RData
+.Rproj.user/
+.Ruserdata
+renv/library/
+renv/staging/
+
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# --- Quarto ---
+.quarto/
+_site/
+r-dashboard/*_files/
+
+# --- Power BI (keep the .pbip text project, not binaries or caches) ---
+*.pbix
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# --- Data: keep only small samples ---
+/data/*
+!/data/GA4-demo/
+!/data/cmrd/
+
+# --- OS and editor ---
+.DS_Store
+Thumbs.db
+.vscode/
+
+# --- Render intermediates ---
+*.knit.md
+*.quarto_ipynb
+r-dashboard/dashboard.html
+
+# --- Rendered READMEs (editor preview output) ---
+**/README.html
+**/README_files/
+docs/dashboard-spec.html
+docs/dashboard-spec_files/
+cmrd-analytics/*.html
+cmrd-analytics/*_files/
+.Renviron

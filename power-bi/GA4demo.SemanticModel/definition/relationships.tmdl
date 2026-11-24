@@ -1,0 +1,16 @@
+relationship daily_kpis_to_date
+	fromColumn: daily_kpis.date
+	toColumn: Date.Date
+
+relationship funnel_daily_to_date
+	fromColumn: funnel_daily.date
+	toColumn: Date.Date
+
+relationship channel_summary_to_month
+	fromColumn: channel_summary.month
+	toColumn: Month.Month
+
+relationship device_summary_to_month
+	fromColumn: device_summary.month
+	toColumn: Month.Month
+

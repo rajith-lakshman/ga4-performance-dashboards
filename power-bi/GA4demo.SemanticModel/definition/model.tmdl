@@ -1,0 +1,24 @@
+model Model
+	culture: en-GB
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-GB
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_ProTooling = ["DevMode"]
+
+annotation PBI_QueryOrder = ["daily_kpis","channel_summary","device_summary","funnel_daily","DataFolder"]
+
+ref table daily_kpis
+ref table channel_summary
+ref table device_summary
+ref table funnel_daily
+ref table Date
+ref table Month
+
+ref cultureInfo en-GB
+

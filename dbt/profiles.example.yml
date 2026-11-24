@@ -1,0 +1,12 @@
+# Copy the block into ~/.dbt/profiles.yml (outside the repo) and set your own project id.
+# No keys: authentication is browser OAuth via `gcloud auth application-default login`.
+ga4_dashboards:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: YOUR_GCP_PROJECT_ID   # your sandbox project, not stored in the repo
+      dataset: ga4_dashboards_dev
+      location: US                   # must match the public dataset
+      threads: 4

@@ -1,0 +1,24 @@
+table Date
+	lineageTag: d63728ac-53e1-4b5b-b468-5920ec2e1c74
+	dataCategory: Time
+
+	/// Calendar from the first to the last date in daily_kpis.
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 078024e0-a685-4b56-8602-cd9a6687c398
+		summarizeBy: none
+		sourceColumn: [Date]
+
+	/// TRUE from 2020-11-25, the day after the last day with a missing funnel step in the raw sample (update if the data is refreshed).
+	column 'In funnel window'
+		dataType: boolean
+		lineageTag: 6890a11b-f00c-4d09-8c14-010b0b06adfe
+		summarizeBy: none
+		sourceColumn: [In funnel window]
+
+	partition Date = calculated
+		mode: import
+		source = ADDCOLUMNS(CALENDAR(MIN(daily_kpis[date]), MAX(daily_kpis[date])), "In funnel window", [Date] >= DATE(2020, 11, 25))
+

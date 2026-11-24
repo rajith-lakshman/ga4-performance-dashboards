@@ -1,0 +1,105 @@
+table daily_kpis
+	lineageTag: af9c195e-fac4-4b1a-8351-39c6021d243d
+
+	/// Sessions: distinct user_pseudo_id + ga_session_id. SAMPLE DATA (GA4 Google Merchandise Store sample).
+	measure 'Total sessions' = SUM(daily_kpis[sessions])
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: 529b637c-1bfb-42a0-a4f7-bfc9a717eea5
+
+	/// Sessions with 10+ seconds of engagement, a purchase, or 2+ page views (GA4 rule rebuilt from events). SAMPLE DATA.
+	measure 'Engaged sessions' = SUM(daily_kpis[engaged_sessions])
+		formatString: #,0
+		displayFolder: Overview
+		lineageTag: 071429e5-48ec-447c-9846-6e85cade38c2
+
+	/// Engaged sessions divided by sessions. Ratio of sums, never an average of daily rates. SAMPLE DATA.
+	measure 'Engagement rate' = DIVIDE([Engaged sessions], [Total sessions])
+		formatString: 0.0%
+		displayFolder: Overview
+		lineageTag: 77ee9543-94d7-4d0c-a144-6db096a34dad
+
+	/// Distinct users per day summed over the selected days (user-days). Not distinct users across days. SAMPLE DATA.
+	measure 'Daily active users' = SUM(daily_kpis[users])
+		formatString: #,0
+		displayFolder: Audience
+		lineageTag: 63689732-fdd1-4e36-a2af-794e439a153a
+
+	/// Users with a session numbered 1 that day, summed over days (user-days). SAMPLE DATA.
+	measure 'New users' = SUM(daily_kpis[new_users])
+		formatString: #,0
+		displayFolder: Audience
+		lineageTag: a035ee03-cae7-49f0-a88e-7e6f032eb2e3
+
+	/// Active users that day who are not new, summed over days (user-days). SAMPLE DATA.
+	measure 'Returning users' = SUM(daily_kpis[returning_users])
+		formatString: #,0
+		displayFolder: Audience
+		lineageTag: a5fa737c-6a0e-4f17-9c46-6f47e0474f92
+
+	/// New users divided by daily active users, a share of user-days. SAMPLE DATA.
+	measure 'New user share' = DIVIDE([New users], [Daily active users])
+		formatString: 0.0%
+		displayFolder: Audience
+		lineageTag: d4ac2817-1295-4b1d-93f5-c37e2f155bb5
+
+	/// Returning users divided by daily active users, a share of user-days. SAMPLE DATA.
+	measure 'Returning user share' = DIVIDE([Returning users], [Daily active users])
+		formatString: 0.0%
+		displayFolder: Audience
+		lineageTag: dad5249b-44f7-44bd-b373-d0c29c6a0fa4
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: f4c6f954-d373-4e4d-b893-ba93e3465b42
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: 0d7d8738-bb4c-44b2-a55f-90b2d0b3edf1
+		summarizeBy: none
+		sourceColumn: sessions
+
+	column engaged_sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: 1db02d50-982f-4e08-98f0-2b32451ba4c2
+		summarizeBy: none
+		sourceColumn: engaged_sessions
+
+	column users
+		dataType: int64
+		formatString: 0
+		lineageTag: b29a193c-c5a7-4286-bff4-7d101dbae4ac
+		summarizeBy: none
+		sourceColumn: users
+
+	column new_users
+		dataType: int64
+		formatString: 0
+		lineageTag: f58413b2-0140-4616-8145-4628f2eb8812
+		summarizeBy: none
+		sourceColumn: new_users
+
+	column returning_users
+		dataType: int64
+		formatString: 0
+		lineageTag: 67c140c2-a38d-4223-8be7-acd8d01e8c5d
+		summarizeBy: none
+		sourceColumn: returning_users
+
+	partition daily_kpis = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(Text.TrimEnd(DataFolder, "\") & "\daily_kpis.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+					Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+					Typed = Table.TransformColumnTypes(Promoted, {{"date", type date}, {"sessions", Int64.Type}, {"engaged_sessions", Int64.Type}, {"users", Int64.Type}, {"new_users", Int64.Type}, {"returning_users", Int64.Type}}, "en-US")
+				in
+					Typed
+

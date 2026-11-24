@@ -1,0 +1,113 @@
+---
+title: "Website analytics: views, countries and language switching"
+format:
+  dashboard:
+    embed-resources: true
+    css: styles.css
+---
+
+```{r}
+#| include: false
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
+library(sf)
+library(rnaturalearth)
+library(scales)
+# Site languages: en English, si Sinhala, ta Tamil
+SITE_LANGUAGES <- c("en", "si", "ta")
+
+# Use the real archive if it has rows; otherwise fall back to synthetic demo data.
+real_file <- "../data/cmrd/real/ga4_daily_views.csv"
+use_real  <- file.exists(real_file) && nrow(read_csv(real_file, show_col_types = FALSE)) > 0
+data_dir  <- if (use_real) "../data/cmrd/real" else "../data/cmrd/demo"
+
+views <- read_csv(file.path(data_dir, "ga4_daily_views.csv"), show_col_types = FALSE)
+switch_file <- file.path(data_dir, "ga4_language_switches.csv")
+switches <- if (file.exists(switch_file)) {
+  read_csv(switch_file, show_col_types = FALSE)
+} else {
+  tibble(date = as.Date(character()), from_language = character(),
+         to_language = character(), switches = numeric())
+}
+```
+
+## Row {height=14%}
+
+```{r}
+#| content: valuebox
+#| title: !expr if (use_real) paste0("Data source, ", format(min(views$date)), " to ", format(max(views$date))) else "Data source"
+list(
+  icon  = if (use_real) "database" else "exclamation-triangle",
+  color = if (use_real) "primary" else "warning",
+  value = if (use_real) "Real GA4 data" else "SYNTHETIC demo data (not real traffic)"
+)
+```
+
+## Row {height=45%}
+
+```{r}
+#| title: "Daily page views by language"
+views |>
+  group_by(date, language) |>
+  summarise(views = sum(views), .groups = "drop") |>
+  ggplot(aes(date, views, fill = language)) +
+  geom_area() +
+  labs(x = NULL, y = "Page views", fill = "Site language") +
+  theme_minimal()
+```
+
+## Row {height=45%}
+
+```{r}
+#| title: "Page views by country (log scale)"
+world <- ne_countries(scale = "medium", returnclass = "sf")
+code_col <- if ("iso_a2_eh" %in% names(world)) "iso_a2_eh" else "iso_a2"
+world$country_id <- world[[code_col]]
+
+by_country <- views |>
+  group_by(country_id) |>
+  summarise(views = sum(views), .groups = "drop")
+
+world |>
+  left_join(by_country, by = "country_id") |>
+  ggplot() +
+  geom_sf(aes(fill = views), colour = "grey70", linewidth = 0.1) +
+  scale_fill_viridis_c(trans = "log10", labels = label_comma(),
+                       na.value = "grey92", name = "Views") +
+  theme_void()
+```
+
+```{r}
+#| title: "Language switches (from row, to column)"
+if (nrow(switches) == 0) {
+  # No switch rows yet: say so instead of drawing a grid of zeros.
+  ggplot() +
+    annotate("text", x = 0, y = 0, size = 5, lineheight = 1.2,
+             label = "Not tracked yet.
+Language-switch events appear here once
+the GTM tag and GA4 custom dimensions have data.") +
+    theme_void()
+} else {
+  lang_grid <- expand_grid(from_language = SITE_LANGUAGES, to_language = SITE_LANGUAGES) |>
+    left_join(
+      switches |>
+        group_by(from_language, to_language) |>
+        summarise(switches = sum(switches), .groups = "drop"),
+      by = c("from_language", "to_language")
+    ) |>
+    # Same-to-same is not a switch, so it is left blank rather than zero.
+    mutate(switches = ifelse(from_language == to_language, NA, coalesce(switches, 0)))
+
+  ggplot(lang_grid, aes(to_language, from_language, fill = switches)) +
+    geom_tile(colour = "white") +
+    geom_text(aes(label = switches, colour = switches > max(switches, na.rm = TRUE) / 2),
+              na.rm = TRUE, show.legend = FALSE) +
+    scale_colour_manual(values = c("black", "white")) +
+    scale_y_discrete(limits = rev(SITE_LANGUAGES)) +
+    scale_fill_gradient(low = "#deebf7", high = "#08519c", na.value = "grey90") +
+    labs(x = "Switched to", y = "Switched from", fill = "Switches") +
+    theme_minimal()
+}
+```

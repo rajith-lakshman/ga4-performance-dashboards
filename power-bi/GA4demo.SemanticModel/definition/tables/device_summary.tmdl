@@ -1,0 +1,54 @@
+table device_summary
+	lineageTag: 0f86dfbb-ca62-45cf-a804-a5805b5b4f7d
+
+	/// Sessions by device category. SAMPLE DATA.
+	measure 'Device sessions' = SUM(device_summary[sessions])
+		formatString: #,0
+		displayFolder: Device
+		lineageTag: 58b4d64f-b981-4530-9983-4226d6b9a3a8
+
+	/// Share of sessions in each device category within the selected months. SAMPLE DATA.
+	measure 'Device share' = DIVIDE([Device sessions], CALCULATE([Device sessions], REMOVEFILTERS(device_summary[device_category])))
+		formatString: 0.0%
+		displayFolder: Device
+		lineageTag: e89acaef-8de6-4a69-aeea-82e902927a87
+
+	column month
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: ea287675-9b5f-4325-97e7-fc8c30f2b94c
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column device_category
+		dataType: string
+		lineageTag: 613def8b-337b-4d13-b384-9cfe58261e41
+		summarizeBy: none
+		sourceColumn: device_category
+
+	column sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: 6711c9d4-e60d-4c8d-becb-0f453d9a6e73
+		summarizeBy: none
+		sourceColumn: sessions
+
+	column engaged_sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: a36c2c8a-55e5-45d2-8808-5d77ff3795ad
+		summarizeBy: none
+		sourceColumn: engaged_sessions
+
+	partition device_summary = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(Text.TrimEnd(DataFolder, "\") & "\device_summary.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+					Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+					Typed = Table.TransformColumnTypes(Promoted, {{"month", type date}, {"device_category", type text}, {"sessions", Int64.Type}, {"engaged_sessions", Int64.Type}}, "en-US")
+				in
+					Typed
+

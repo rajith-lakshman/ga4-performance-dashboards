@@ -1,0 +1,54 @@
+table channel_summary
+	lineageTag: 4c11df7d-6acc-4066-92c0-0b0bd5c142ec
+
+	/// Sessions by channel (traffic_source medium grouping, first-touch). SAMPLE DATA.
+	measure 'Channel sessions' = SUM(channel_summary[sessions])
+		formatString: #,0
+		displayFolder: Channel
+		lineageTag: 6ba2abf9-2cde-4ab6-99d6-ccc59788f8c1
+
+	/// Share of sessions in each channel within the selected months. SAMPLE DATA.
+	measure 'Channel share' = DIVIDE([Channel sessions], CALCULATE([Channel sessions], REMOVEFILTERS(channel_summary[channel])))
+		formatString: 0.0%
+		displayFolder: Channel
+		lineageTag: 77c07f9f-0250-450d-b182-23d0fdf14e62
+
+	column month
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 88d25cae-2df4-4eb0-9bfe-316d19780d5a
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column channel
+		dataType: string
+		lineageTag: 75862691-a235-483b-ac10-bb1165d30522
+		summarizeBy: none
+		sourceColumn: channel
+
+	column sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: b3c3d2bc-91c0-4151-a459-95415a453607
+		summarizeBy: none
+		sourceColumn: sessions
+
+	column engaged_sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: a4bf96bb-8427-4335-a402-93df24342dd2
+		summarizeBy: none
+		sourceColumn: engaged_sessions
+
+	partition channel_summary = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(Text.TrimEnd(DataFolder, "\") & "\channel_summary.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+					Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+					Typed = Table.TransformColumnTypes(Promoted, {{"month", type date}, {"channel", type text}, {"sessions", Int64.Type}, {"engaged_sessions", Int64.Type}}, "en-US")
+				in
+					Typed
+

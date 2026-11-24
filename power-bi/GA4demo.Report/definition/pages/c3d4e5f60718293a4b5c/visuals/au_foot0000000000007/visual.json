@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "au_foot0000000000007",
+  "position": {
+    "x": 40,
+    "y": 900,
+    "z": 0,
+    "height": 160,
+    "width": 1840,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "KPI definitions: New users = users with a session numbered 1 that day. Returning users = active users that day who are not new. Both are daily distinct counts, so the shares are shares of user-days, not of distinct users. Channel mix = share of sessions by channel, grouped from traffic_source medium. Device split = share of sessions by device category. Limitations: channel is the user's first-touch source in this dataset, not the session's, and Other collects every medium not listed. Sample data from a different organisation; not CMRD users."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

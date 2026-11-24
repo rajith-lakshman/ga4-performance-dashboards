@@ -1,0 +1,33 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "fu_foot0000000000005",
+  "position": {
+    "x": 40,
+    "y": 900,
+    "z": 0,
+    "height": 160,
+    "width": 1840,
+    "tabOrder": 0
+  },
+  "visual": {
+    "visualType": "textbox",
+    "objects": {
+      "general": [
+        {
+          "properties": {
+            "paragraphs": [
+              {
+                "textRuns": [
+                  {
+                    "value": "KPI definitions: Funnel sessions = sessions with at least one event of that step; order within a session is not checked. Step drop-off = 1 minus (sessions at the step divided by sessions at the previous step); blank for view_item. Limitations: not a strict sequence, so drop-off is indicative. Totals cover only the funnel window above. Sample data from a different organisation; not CMRD users."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

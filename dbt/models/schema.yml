@@ -1,0 +1,103 @@
+version: 2
+
+models:
+  - name: stg_ga4_events
+    description: >
+      GA4 sample events (obfuscated Google Merchandise Store), one row per event, limited to the
+      events and columns the marts use and to the configured date range.
+    columns:
+      - name: event_name
+        description: GA4 event name, limited to the events used by the KPIs.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [page_view, user_engagement, first_visit, session_start, view_item, add_to_cart, begin_checkout, purchase]
+      - name: session_key
+        description: user_pseudo_id plus ga_session_id. Repeats across events; unique per session in int_ga4_sessions.
+      - name: ga_session_id
+        description: Session id event parameter (session start timestamp, seconds).
+      - name: engagement_time_msec
+        description: Engagement time event parameter in milliseconds.
+
+  - name: int_ga4_sessions
+    description: One row per session with engagement flag, first-seen device and traffic source.
+    columns:
+      - name: session_key
+        description: user_pseudo_id plus ga_session_id.
+        tests:
+          - not_null
+          - unique
+      - name: is_engaged
+        description: True if 10+ s engagement, a purchase, or 2+ page views.
+        tests:
+          - not_null
+
+  - name: daily_kpis
+    description: Daily sessions, engaged sessions and users. User counts are daily distinct, not additive across days.
+    columns:
+      - name: date
+        description: Session date.
+        tests: [not_null, unique]
+      - name: sessions
+        description: Distinct sessions.
+        tests: [not_null]
+      - name: engaged_sessions
+        description: Sessions meeting the engaged-session rule.
+        tests: [not_null]
+      - name: users
+        description: Distinct users active that day.
+      - name: new_users
+        description: Users with a session numbered 1 that day.
+      - name: returning_users
+        description: users minus new_users.
+
+  - name: channel_summary
+    description: Monthly sessions and engaged sessions by channel (traffic_source medium grouping, first-touch).
+    columns:
+      - name: month
+        description: First day of month.
+        tests: [not_null]
+      - name: channel
+        description: Direct, Organic Search, Paid Search, Referral or Other.
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [Direct, Organic Search, Paid Search, Referral, Other]
+      - name: sessions
+        description: Distinct sessions.
+      - name: engaged_sessions
+        description: Engaged sessions.
+
+  - name: device_summary
+    description: Monthly sessions and engaged sessions by device category.
+    columns:
+      - name: month
+        description: First day of month.
+        tests: [not_null]
+      - name: device_category
+        description: desktop, mobile, tablet or unknown.
+        tests: [not_null]
+      - name: sessions
+        description: Distinct sessions.
+      - name: engaged_sessions
+        description: Engaged sessions.
+
+  - name: funnel_daily
+    description: Daily sessions that fired each ecommerce funnel step. Order within a session is not checked.
+    columns:
+      - name: date
+        description: Event date.
+        tests: [not_null]
+      - name: step_order
+        description: 1 view_item, 2 add_to_cart, 3 begin_checkout, 4 purchase.
+        tests: [not_null]
+      - name: step
+        description: Funnel event name.
+        tests:
+          - accepted_values:
+              arguments:
+                values: [view_item, add_to_cart, begin_checkout, purchase]
+      - name: sessions
+        description: Distinct sessions with the event.

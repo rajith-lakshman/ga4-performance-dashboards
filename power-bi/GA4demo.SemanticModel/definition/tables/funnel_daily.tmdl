@@ -1,0 +1,55 @@
+table funnel_daily
+	lineageTag: 61c66fc2-ac7a-4961-9bad-0fdaee6de60a
+
+	/// Sessions with at least one event of the step, within the funnel window (days when all four steps exist in the raw sample). Order within a session is not checked. SAMPLE DATA.
+	measure 'Funnel sessions' = CALCULATE(SUM(funnel_daily[sessions]), 'Date'[In funnel window] = TRUE())
+		formatString: #,0
+		displayFolder: Funnel
+		lineageTag: b7269f0e-d639-4df1-bafe-ba308fd375e3
+
+	/// 1 minus (sessions at this step divided by sessions at the previous step). Blank for view_item. Indicative only. SAMPLE DATA.
+	measure 'Step drop-off' = VAR stp = MAX(funnel_daily[step_order]) VAR prev = CALCULATE([Funnel sessions], REMOVEFILTERS(funnel_daily[step]), REMOVEFILTERS(funnel_daily[step_order]), funnel_daily[step_order] = stp - 1) RETURN IF(HASONEVALUE(funnel_daily[step_order]) && stp > 1, 1 - DIVIDE([Funnel sessions], prev), BLANK())
+		formatString: 0.0%
+		displayFolder: Funnel
+		lineageTag: da7f248e-bbad-44ef-b644-ed3278915f36
+
+	column date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: e09c8647-db37-4de6-8b8f-949bd4438750
+		summarizeBy: none
+		sourceColumn: date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column step_order
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b71c1a2-730b-40cf-b5a2-ac9c4c055034
+		summarizeBy: none
+		sourceColumn: step_order
+
+	column step
+		dataType: string
+		lineageTag: 5b2cf1d1-0fd3-4d02-8c22-3691500b502c
+		summarizeBy: none
+		sourceColumn: step
+		sortByColumn: step_order
+
+	column sessions
+		dataType: int64
+		formatString: 0
+		lineageTag: 50ce8190-45b8-417e-98a9-631612d139a5
+		summarizeBy: none
+		sourceColumn: sessions
+
+	partition funnel_daily = m
+		mode: import
+		source =
+				let
+					Source = Csv.Document(File.Contents(Text.TrimEnd(DataFolder, "\") & "\funnel_daily.csv"), [Delimiter = ",", Encoding = 65001, QuoteStyle = QuoteStyle.Csv]),
+					Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars = true]),
+					Typed = Table.TransformColumnTypes(Promoted, {{"date", type date}, {"step_order", Int64.Type}, {"step", type text}, {"sessions", Int64.Type}}, "en-US")
+				in
+					Typed
+

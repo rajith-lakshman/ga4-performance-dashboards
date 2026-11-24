@@ -1,0 +1,15 @@
+table Month
+	lineageTag: 139b675d-2300-456f-8d04-8555391ef08c
+
+	column Month
+		dataType: dateTime
+		isKey
+		formatString: mmm yyyy
+		lineageTag: 8f636472-12a0-4608-b327-4cf361c8de4f
+		summarizeBy: none
+		sourceColumn: [Month]
+
+	partition Month = calculated
+		mode: import
+		source = DISTINCT(UNION(SELECTCOLUMNS(channel_summary, "Month", channel_summary[month]), SELECTCOLUMNS(device_summary, "Month", device_summary[month])))
+
